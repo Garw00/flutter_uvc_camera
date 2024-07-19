@@ -118,6 +118,10 @@ class FlutterUVCCameraPlugin : FlutterPlugin, MethodCallHandler, ActivityAware {
                result.success(mUVCCameraViewFactory.getAllPreviewSizes())
             }
 
+            "getCameraList" -> {
+                result.success(mUVCCameraViewFactory.getCameraList())
+            }
+
             "getCurrentCameraRequestParameters" -> {
                 result.success(mUVCCameraViewFactory.getCurrentCameraRequestParameters())
             }

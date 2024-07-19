@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/cupertino.dart';
@@ -22,6 +23,9 @@ class UVCCameraController {
   final List<String> _callStrings = [];
   List<String> get getCallStrings => _callStrings;
   Function(String)? msgCallback;
+
+  Function(Map<dynamic, dynamic>)? CameraStreamCallback;
+
   List<PreviewSize> _previewSizes = [];
   List<PreviewSize> get getPreviewSizes => _previewSizes;
 
@@ -39,6 +43,9 @@ class UVCCameraController {
     _cameraChannel = null;
     debugPrint("------> UVCCameraController dispose");
   }
+
+  // 节流处理数据，例如每隔一定时间处理一次
+  Timer? _throttleTimer;
 
   ///接收来自Android的消息
   Future<void> _methodChannelHandler(MethodCall call) async {
@@ -60,11 +67,21 @@ class UVCCameraController {
         // capture H264 & AAC only
         debugPrint(args.toString());
         break;
+      case "onPreviewData":
+        // debugPrint(
+        //     "type:${call.arguments['format']},width:${call.arguments['width']},height:${call.arguments['height']},data:${call.arguments['data'].length}");
+        CameraStreamCallback?.call(call.arguments);
+        break;
     }
   }
 
   Future<void> initializeCamera() async {
     await _cameraChannel?.invokeMethod('initializeCamera');
+  }
+
+  Future getCameraList() async {
+    var data = await _cameraChannel?.invokeMethod('getCameraList');
+    return data;
   }
 
   Future<void> openUVCCamera() async {
@@ -99,6 +116,7 @@ class UVCCameraController {
       list.add(PreviewSize.fromJson(element));
     });
     _previewSizes = list;
+    return list;
   }
 
   /// 获取当前摄像头请求参数

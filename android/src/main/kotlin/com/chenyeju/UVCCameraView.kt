@@ -30,6 +30,7 @@ import com.jiangdg.ausbc.callback.ICameraStateCallBack
 import com.jiangdg.ausbc.callback.ICaptureCallBack
 import com.jiangdg.ausbc.callback.IDeviceConnectCallBack
 import com.jiangdg.ausbc.callback.IEncodeDataCallBack
+import com.jiangdg.ausbc.callback.IPreviewDataCallBack
 import com.jiangdg.ausbc.camera.bean.CameraRequest
 import com.jiangdg.ausbc.render.env.RotateType
 import com.jiangdg.ausbc.utils.Logger
@@ -402,6 +403,20 @@ internal class UVCCameraView(
         }
         requestPermission(usbDevice)
     }
+    // 获取摄像头列表
+    fun getCameraList(): String {
+        val deviceList = mCameraClient?.getDeviceList() ?: emptyList()
+
+         // 打印设备列表的详细信息以进行调试
+        Logger.i(TAG, "Device List Size: ${deviceList.size}")
+        deviceList?.let  { device ->
+            Logger.i(TAG, "Device: $device")
+        }
+        val result = Gson().toJson(deviceList)
+        Logger.i(TAG, "------>CameraState: $result")
+
+        return result
+    }
 
     fun openCamera(st: IAspectRatio? = null) {
         when (st) {
@@ -472,11 +487,15 @@ internal class UVCCameraView(
 
     private fun getCameraRequest(): CameraRequest {
         return CameraRequest.Builder()
-            .setPreviewWidth(640)
-            .setPreviewHeight(480)
+            .setPreviewWidth(1280)
+            .setPreviewHeight(720)
+            // .setPreviewWidth(640)
+            // .setPreviewHeight(480)
             .setRenderMode(CameraRequest.RenderMode.OPENGL)
             .setDefaultRotateType(RotateType.ANGLE_0)
             .setAudioSource(CameraRequest.AudioSource.SOURCE_SYS_MIC)
+            // .setPreviewFormat(CameraRequest.PreviewFormat.FORMAT_YUYV)
+            .setPreviewFormat(CameraRequest.PreviewFormat.FORMAT_MJPEG)
             .setAspectRatioShow(true)
             .setCaptureRawImage(false)
             .setRawPreviewData(false)
@@ -512,18 +531,24 @@ internal class UVCCameraView(
 
 
     }
-    /**
-     * Start capture H264 & AAC only
-     */
+    
      fun captureStreamStart() {
-        setEncodeDataCallBack()
-        getCurrentCamera()?.captureStreamStart()
+        // setEncodeDataCallBack()
+        setPreviewDataCallBack()
+        // getCurrentCamera()?.captureStreamStart()
     }
 
      fun captureStreamStop() {
-        getCurrentCamera()?.captureStreamStop()
+        val currentCallback = previewDataCallback
+        if (currentCallback != null) {
+            getCurrentCamera()?.removePreviewDataCallBack(currentCallback)
+            previewDataCallback = null
+        }
+        // getCurrentCamera()?.captureStreamStop()
     }
-
+    /**
+     * capture H264 & AAC only
+     */
     private fun setEncodeDataCallBack() {
         getCurrentCamera()?.setEncodeDataCallBack(object :  IEncodeDataCallBack {
             override fun onEncodeData(
@@ -543,6 +568,27 @@ internal class UVCCameraView(
                     mChannel.invokeMethod("onEncodeData", args)
                 }}
         })
+    }
+
+    private var previewDataCallback: IPreviewDataCallBack? = null
+    private fun setPreviewDataCallBack() {
+        val callback =  object : IPreviewDataCallBack {
+            override fun onPreviewData(data: ByteArray?, width: Int, height: Int, format: IPreviewDataCallBack.DataFormat) {
+                if (data != null) {
+                    val args = hashMapOf<String, Any>(
+                        "data" to data,
+                        "width" to width,
+                        "height" to height,
+                        "format" to format.name
+                    )
+                    Handler(Looper.getMainLooper()).post {
+                        mChannel.invokeMethod("onPreviewData", args)
+                    }
+                }
+            }
+        }
+        getCurrentCamera()?.addPreviewDataCallBack(callback)
+        previewDataCallback = callback
     }
 
 

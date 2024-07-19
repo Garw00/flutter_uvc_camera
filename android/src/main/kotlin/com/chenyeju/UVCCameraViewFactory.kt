@@ -51,5 +51,7 @@ class UVCCameraViewFactory(private val plugin: FlutterUVCCameraPlugin,private va
         cameraView.updateResolution(arguments)
     }
 
+    //获取摄像头列表
+    fun getCameraList() = cameraView.getCameraList()
 
 }
