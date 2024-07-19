@@ -17,7 +17,8 @@ Add the `flutter_uvc_camera` plugin dependency to your Flutter project's `pubspe
 
 ```yaml
 dependencies:
-  flutter_uvc_camera: last_version
+  flutter_uvc_camera: 
+    path: ./flutter_uvc_camera
 ```
 
 
@@ -141,7 +142,33 @@ flutter run release encounters a NoSuchMethodError
   *;
   }
 ```
- 
+ ## Get yuv
+ I added the setPreviewDataCallBack method in android\src\main\kotlin\com\chenyeju\UVCCameraView.kt to obtain yuv data, and directly listen to CameraStreamCallback
+ ```
+usbcameraController?.CameraStreamCallback = (args) {
+      frameRateTool();
+      if (!isJoined) {
+        return;
+      }
+      print(
+          "size:${args['data'].length} format:${args['format']} width:${args['width']} height:${args['height']}");
+      if (args['format'] == "RGBA") {
+        _pushVideoFrame(
+            args['data'],
+            args['width'],
+            args['height'],
+            VideoPixelFormat.videoPixelRgba,
+            DateTime.now().millisecondsSinceEpoch);
+      } else if (args['format'] == "NV21") {
+        _pushVideoFrame(
+            args['data'],
+            args['width'],
+            args['height'],
+            VideoPixelFormat.videoPixelNv21,
+            DateTime.now().millisecondsSinceEpoch);
+      }
+    };
+  ```
   
 
 ## Notes
