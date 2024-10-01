@@ -104,6 +104,14 @@ class UVCCameraController {
     _cameraChannel?.invokeMethod('captureStreamStop');
   }
 
+  void captureAudioStart() {
+    _cameraChannel?.invokeMethod('captureAudioStart');
+  }
+
+  void captureAudioStop() {
+    _cameraChannel?.invokeMethod('captureAudioStop');
+  }
+
   void startCamera() async {
     await _cameraChannel?.invokeMethod('startCamera');
   }
