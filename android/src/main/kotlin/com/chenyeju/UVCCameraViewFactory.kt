@@ -32,11 +32,18 @@ class UVCCameraViewFactory(private val plugin: FlutterUVCCameraPlugin,private va
         cameraView.captureVideo(callback)
     }
 
-    fun captureStreamStart(){
-        cameraView.captureStreamStart()
+    fun captureStreamStart(callBack: ICaptureCallBack, path: String ?= null){
+        cameraView.captureStreamStart(callBack, path)
     }
     fun captureStreamStop(){
         cameraView.captureStreamStop()
+    }
+
+    fun captureAudioStart(){
+        cameraView.captureAudioStart()
+    }
+    fun captureAudioStop(){
+        cameraView.captureAudioStop()
     }
 
 
